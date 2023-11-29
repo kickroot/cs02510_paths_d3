@@ -1,4 +1,45 @@
 
+node_colors = [
+    {
+        "pattern" : /ranger-stop\d/,
+        "color" : "yellow"
+    },
+    {
+        "pattern" : /gate\d/,
+        "color" : "red"
+    },
+    {
+        "pattern" : /general-gate\d/,
+        "color" : "cyan"
+    },
+    {
+        "pattern" : /entrance\d/,
+        "color" : "green"
+    },
+    {
+        "pattern" : /camping\d/,
+        "color" : "orange"
+    },
+    {
+        "pattern" : /ranger-base/,
+        "color" : "purple"
+    }    
+];
+
+function colorize(node_id) {
+    color = "gray"
+    node_colors.forEach(c => {
+        if (c.pattern.test(node_id)) {
+            color = c.color;
+        }
+    });
+
+    return color;
+}
+
+
+
+
 positions = {
     "ranger-stop1" : [99, 123],
     "gate2" : [123, 267],
