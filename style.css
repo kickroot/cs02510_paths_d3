@@ -21,3 +21,21 @@ h1 {
     margin-left: 1em;
     margin-bottom: 1em;
 }
+
+#status-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 2em;            /* Footer height */
+    border-top: 1px solid #888;
+    line-height: 2em;
+    vertical-align: middle;
+    color: #ccc;
+}
+
+#status-bar p {
+    line-height: 2em;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 1em;
+}

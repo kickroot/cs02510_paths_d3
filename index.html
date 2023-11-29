@@ -14,6 +14,11 @@
       <h1>Path Utilization</h1>
       <hr />
     </div>
+    <div id="status-bar">
+      <p id="status-text">
+        Ready...
+      </p>
+      </div>
     <script type="text/javascript">
 
       // In the interests of readability, we're going to scale the x coordinate to stretch
@@ -77,33 +82,37 @@
       // Iterate over allPaths and increment the width for invidual edges
       //
 
-      function incrementEdge(edgeId) {
+      function incrementEdge(index, batch) {
+        for (i = 0 ; i < batch ; i++) {
+          if (allPaths.length <= index + i) {
+            console.log("Interval iteration complete.");
+            return;
+          }
 
+          var idVal = `#${allPaths[index+i]}`;
+          var line = d3.select(idVal)
+          try {
+            var width = parseFloat(line.style("stroke-width")) + 0.02;        
+            line.style("stroke-width", width + "px");
+            // console.log(`Incrementing ${line} to ${width}`);
+          } catch (e) {
+            // console.log(idVal);
+          }
+        }
       }
 
+      var batch = 15;
       var index = 0;
       var intervalsRemaining = allPaths.length;
       var intervalId = setInterval(function() {
-        idVal = `#${allPaths[index]}`;
-        var line = d3.select(idVal)
-        // console.log(line);
-        if (line == null) {
-          console.log(`${idVal} is null`);
-          return;
-        }
-        
-        try {
-          var width = parseFloat(line.style("stroke-width")) + 0.05;        
-          line.style("stroke-width", width + "px");
-          console.log(`Incrementing ${line} to ${width}`);
-        } catch (e) {
-          // console.log(idVal);
-        }
-        intervalsRemaining--;
-        index++;
+        d3.select("#status-text").html(`${intervalsRemaining} intervals remaining`);
+        incrementEdge(index, batch);
+        intervalsRemaining -= batch;
+        index += batch;
 
-        if (intervalsRemaining == 0) {        
+        if (intervalsRemaining <= 0) {        
           clearInterval(intervalId);
+          d3.select("#status-text").html("Interval iteration complete");
         }
       }, 1);
 
