@@ -6,11 +6,13 @@
     <title>D3 Paths</title>
     <script type="text/javascript" src="d3/d3.v3.min.js"></script>
     <script type="text/javascript" src="data.js"></script>
+    <script type="text/javascript" src="paths.js"></script>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <div id="content">
-      <h1>D3 Paths</h1>
+      <h1>Path Utilization</h1>
+      <hr />
     </div>
     <script type="text/javascript">
 
@@ -39,7 +41,9 @@
         .data(data.links)
         .enter().append("line")
         .attr("class", "link")
-        .style("stroke", "#999")
+        .style("stroke", "white")
+        .style("stroke-width", 0.2)
+        .attr("id", d => {return [d.source, d.target].sort().join("-")})
         .attr("x1", d => xScaler(positions[d.source][0]))
         .attr("y1", d => positions[d.source][1])
         .attr("x2", d => xScaler(positions[d.target][0]))
@@ -55,7 +59,9 @@
         .attr("transform", (d) => `translate(${xScaler(positions[d.id][0])}, ${positions[d.id][1]})`);
         
         node.append("circle")
-          .attr("r", 10)
+          .attr("r", 8)
+          .style("stroke", "white")
+          .style("stroke-width", 2)
           .style("fill", (d) => colorize(d.id));
 
         node.append("text")
@@ -63,6 +69,45 @@
           .attr("dy", ".35em")
           .style("fill", "white")
           .text((d) => d.name );
+
+
+
+      
+      //
+      // Iterate over allPaths and increment the width for invidual edges
+      //
+
+      function incrementEdge(edgeId) {
+
+      }
+
+      var index = 0;
+      var intervalsRemaining = allPaths.length;
+      var intervalId = setInterval(function() {
+        idVal = `#${allPaths[index]}`;
+        var line = d3.select(idVal)
+        // console.log(line);
+        if (line == null) {
+          console.log(`${idVal} is null`);
+          return;
+        }
+        
+        try {
+          var width = parseFloat(line.style("stroke-width")) + 0.05;        
+          line.style("stroke-width", width + "px");
+          console.log(`Incrementing ${line} to ${width}`);
+        } catch (e) {
+          // console.log(idVal);
+        }
+        intervalsRemaining--;
+        index++;
+
+        if (intervalsRemaining == 0) {        
+          clearInterval(intervalId);
+        }
+      }, 1);
+
+
     </script>
   </body>
 </html>     
