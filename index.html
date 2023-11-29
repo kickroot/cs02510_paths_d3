@@ -27,11 +27,11 @@
       Object.entries(positions).forEach(e => xValues.push(e[1][0]))
       // positions.values.forEach(v => xValues.append(v[0]));
       max = d3.max(xValues)
-      const xScaler = d3.scaleLinear([0, max], [0, 1.5 * max]);
+      const xScaler = d3.scaleLinear([0, max], [0, 1.7 * max]);
 
       // set the dimensions and margins of the graph
       var margin = {top: 10, right: 30, bottom: 30, left: 40},
-        width = 1600 - margin.left - margin.right,
+        width = 1800 - margin.left - margin.right,
         height = 1000 - margin.top - margin.bottom;
 
       // append the svg object to the body of the page
@@ -74,14 +74,12 @@
           .attr("dy", ".35em")
           .style("fill", "white")
           .text((d) => d.name );
-
-
-
       
       //
       // Iterate over allPaths and increment the width for invidual edges
       //
-
+      const strokeScaler = d3.scaleLinear([0, 15000], [0.1, 10]);
+      counts = new Map();
       function incrementEdge(index, batch) {
         for (i = 0 ; i < batch ; i++) {
           if (allPaths.length <= index + i) {
@@ -91,9 +89,17 @@
 
           var idVal = `#${allPaths[index+i]}`;
           var line = d3.select(idVal)
+
+          c = counts.get(idVal);
+          if (c == undefined) {
+            c = 0;            
+          }
+          c += 1;
+          counts.set(idVal, c);
+
           try {
-            var width = parseFloat(line.style("stroke-width")) + 0.02;        
-            line.style("stroke-width", width + "px");
+            // var width = parseFloat(line.style("stroke-width")) + 1;        
+            line.style("stroke-width", strokeScaler(c) + "px");
             // console.log(`Incrementing ${line} to ${width}`);
           } catch (e) {
             // console.log(idVal);
@@ -101,7 +107,8 @@
         }
       }
 
-      var batch = 15;
+      
+      var batch = 100;
       var index = 0;
       var intervalsRemaining = allPaths.length;
       var intervalId = setInterval(function() {
@@ -113,6 +120,7 @@
         if (intervalsRemaining <= 0) {        
           clearInterval(intervalId);
           d3.select("#status-text").html("Interval iteration complete");
+          // console.log(`Max Count is ${d3.max(counts.values())}`)
         }
       }, 1);
 
