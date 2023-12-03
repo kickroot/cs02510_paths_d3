@@ -142,6 +142,11 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         resetGraph(); // Reset graph on button click
       });
 
+      function resetGraph() {
+        //console.log(getSelectedCarTypes())
+        location.reload()
+      }
+      
       //
       // Iterate over allPaths and increment the width for invidual edges
       //
