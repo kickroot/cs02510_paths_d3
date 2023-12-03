@@ -54,18 +54,17 @@
         .style("stroke", "white")
         .style("stroke-width", 0.2)
         .attr("id", d => {return [d.source, d.target].sort().join("-")})
-        .attr("x1", d => xScaler(positions[d.source][0]))
-        .attr("y1", d => positions[d.source][1])
-        .attr("x2", d => xScaler(positions[d.target][0]))
-        .attr("y2", d => positions[d.target][1])
+        .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))
+        .attr("y1", d => positions[[d.source, d.target].sort()[0]][1])
+        .attr("x2", d => xScaler(positions[[d.source, d.target].sort()[1]][0]))
+        .attr("y2", d => positions[[d.source, d.target].sort()[1]][1])
         .attr("class", d => {
           //
           // We need to set from/to classes on the edges so we can easily select them during drag operations
           //
           nodes = [d.source, d.target].sort();
           return `from-${nodes[0]} to-${nodes[1]}`
-        })        
-        ;              
+        });              
 
       // Initialize the nodes
       var node = svg
