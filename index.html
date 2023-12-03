@@ -134,7 +134,9 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         node.append("circle")
           .attr("r", 8)
           .style("stroke", "white")
-          .style("stroke-width", 2)
+          .style("stroke-width", 3)
+          .style("stroke-opacity", 0.9)
+          .style("opacity", 0.9)
           .style("fill", (d) => colorize(d.id));
           
         node.append("text")
