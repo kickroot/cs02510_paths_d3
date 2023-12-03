@@ -121,7 +121,15 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         .append("g")
         .attr("class", "node")
         .attr("transform", (d) => `translate(${xScaler(positions[d.id][0])}, ${positions[d.id][1]})`)
-        .call(drag);
+        .call(drag)
+        .on("mouseover", function (event, d) {
+          d3.select(this).select("circle").transition().duration(500).attr("r", 16);
+          d3.select(this).select("text").transition().duration(500).attr("transform", "translate(8, 0)");
+        })
+        .on("mouseout", function (event, d) {
+          d3.select(this).select("circle").transition().duration(500).attr("r", 10);
+          d3.select(this).select("text").transition().duration(500).attr("transform", "translate(0, 0)");        
+        });
         
         node.append("circle")
           .attr("r", 8)
