@@ -15,6 +15,13 @@
       <h1>Path Utilization</h1>
       <hr />
       <div id="carTypeCheckboxes"></div>
+      <div class="date-selector-container">
+        <label for="startDate">Start Date:</label>
+        <input type="date" id="startDate" name="startDate" min="2015-05-01" max="2016-05-31" required value="2015-05-01">
+        
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate" name="endDate" min="2015-05-01" max="2016-05-31" required value="2016-05-31">
+      </div>
       <button id="renderButton">Render</button>
       <button id="resetButton">Reset</button>
     </div>
@@ -41,7 +48,8 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         .append("input")
         .attr("type", "checkbox")
         .attr("class", "carTypeCheckbox")
-        .attr("value", d => d);
+        .attr("value", d => d)
+        .attr("checked", true);
 
       // Create a tooltip div
       var tooltip = d3.select("body").append("div")
@@ -197,11 +205,21 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
 
       function renderGraph() {
         const selectedCarTypes = getSelectedCarTypes();
-        const filteredCarData = car_data.filter(d => selectedCarTypes.includes(d["car-type"]));
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        // Filter car data by both car type and date range
+        const filteredCarData = car_data.filter(d => {
+          const carTypeCondition = selectedCarTypes.includes(d["car-type"]);
+          const dateRangeCondition = (
+            d["Start Timestamp"] >= startDate && d["Start Timestamp"] <= endDate
+          ); // Replace "date" with your actual property name
+          return carTypeCondition && dateRangeCondition;
+        });
 
         // Extract car IDs from filtered car data
         const filteredCarIds = filteredCarData.map(d => d["car-id"]);
-
+      
         // Extract paths for the filtered car IDs
         const filteredPaths = {};
         for (const carId of filteredCarIds) {
