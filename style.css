@@ -39,3 +39,24 @@ h1 {
     vertical-align: middle;
     margin-left: 1em;
 }
+
+.checkbox-container {
+    display: block;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    font: 22px sans-serif;
+    background: gray; /* Change the background color to gray */
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    padding: 2px;
+}
+
+#renderButton, #resetButton {
+    font-size: 16px; 
+    padding: 10px 20px; 
+    margin-right: 10px;
+}
