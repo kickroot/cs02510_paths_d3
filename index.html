@@ -6,6 +6,7 @@
     <title>D3 Paths</title>
     <script type="text/javascript" src="d3/d3.v3.min.js"></script>
     <script type="text/javascript" src="data.js"></script>
+    <script type="text/javascript" src="carData.js"></script>
     <script type="text/javascript" src="paths.js"></script>
     <link rel="stylesheet" href="style.css">
   </head>
@@ -13,6 +14,9 @@
     <div id="content">
       <h1>Path Utilization</h1>
       <hr />
+      <div id="carTypeCheckboxes"></div>
+      <button id="renderButton">Render</button>
+      <button id="resetButton">Reset</button>
     </div>
     <div id="status-bar">
       <p id="status-text">
@@ -20,6 +24,27 @@
       </p>
       </div>
     <script type="text/javascript">
+
+const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
+
+      // Populate the checkboxes with car types vertically
+      const checkboxes = d3.select("#carTypeCheckboxes")
+        .selectAll(".checkbox-container")
+        .data(uniqueCarTypes)
+        .enter().append("div")
+        .attr("class", "checkbox-container");
+
+      checkboxes.append("label")
+        .text(d => ` ${d}  -- `)
+        .append("input")
+        .attr("type", "checkbox")
+        .attr("class", "carTypeCheckbox")
+        .attr("value", d => d);
+
+      // Create a tooltip div
+      var tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
       // In the interests of readability, we're going to scale the x coordinate to stretch
       // out the graph to fit the wider screen.
@@ -41,6 +66,8 @@
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+      var counts = new Map();
 
       const drag = d3.drag()
         .on("start", dragStarted)
@@ -64,7 +91,25 @@
           //
           nodes = [d.source, d.target].sort();
           return `from-${nodes[0]} to-${nodes[1]}`
-        });              
+        })
+        .on("mousemove", function (event, d) {
+          var idVal = [d.source, d.target].sort().join("-");
+          var count = counts.get("#"+idVal) || 0;
+          //console.log(idVal)
+          //var cords = d3.pointer(this);
+          //console.log(cords)
+          tooltip.transition()
+            .duration(200)
+            .style("opacity", 0.9);
+          tooltip.html(`Traversals: ${count}`)
+            .style("left", event.pageX + 5 + "px")
+            .style("top", event.pageY - 50 + "px");
+        })
+        .on("mouseout", function (event, d) {
+          tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+        });
 
       // Initialize the nodes
       var node = svg
@@ -88,12 +133,20 @@
           .style("fill", "white")
           .text((d) => d.name );
       
+      // Event listener for "Render" button click
+      d3.select("#renderButton").on("click", function() {
+        renderGraph(); // Render graph on button click
+      });
+
+      d3.select("#resetButton").on("click", function() {
+        resetGraph(); // Reset graph on button click
+      });
+
       //
       // Iterate over allPaths and increment the width for invidual edges
       //
-      const strokeScaler = d3.scaleLinear([0, 15000], [0.1, 10]);
-      counts = new Map();
       function incrementEdge(index, batch) {
+        const strokeScaler = d3.scaleLinear([0, allPaths.length / 10], [0.1, 10]);
         for (i = 0 ; i < batch ; i++) {
           if (allPaths.length <= index + i) {
             console.log("Interval iteration complete.");
@@ -121,19 +174,75 @@
       
       var batch = 100;
       var index = 0;
-      var intervalsRemaining = allPaths.length;
-      var intervalId = setInterval(function() {
-        d3.select("#status-text").html(`${intervalsRemaining} intervals remaining`);
-        incrementEdge(index, batch);
-        intervalsRemaining -= batch;
-        index += batch;
+      // var intervalsRemaining = allPaths.length;
+      // var intervalId = setInterval(function() {
+      //   d3.select("#status-text").html(`${intervalsRemaining} intervals remaining`);
+      //   incrementEdge(index, batch);
+      //   intervalsRemaining -= batch;
+      //   index += batch;
 
-        if (intervalsRemaining <= 0) {        
-          clearInterval(intervalId);
-          d3.select("#status-text").html("Interval iteration complete");
-          // console.log(`Max Count is ${d3.max(counts.values())}`)
+      //   if (intervalsRemaining <= 0) {        
+      //     clearInterval(intervalId);
+      //     d3.select("#status-text").html("Interval iteration complete");
+      //     // console.log(`Max Count is ${d3.max(counts.values())}`)
+      //   }
+      // }, 1);
+
+      function getSelectedCarTypes() {
+        const selectedCarTypes = [];
+        d3.selectAll(".carTypeCheckbox:checked").each(function () {
+          selectedCarTypes.push(this.value);
+        });
+        return selectedCarTypes;
+      }
+
+      function renderGraph() {
+        const selectedCarTypes = getSelectedCarTypes();
+        const filteredCarData = car_data.filter(d => selectedCarTypes.includes(d["car-type"]));
+
+        // Extract car IDs from filtered car data
+        const filteredCarIds = filteredCarData.map(d => d["car-id"]);
+
+        // Extract paths for the filtered car IDs
+        const filteredPaths = {};
+        for (const carId of filteredCarIds) {
+          if (vehiclePaths.hasOwnProperty(carId)) {
+            filteredPaths[carId] = vehiclePaths[carId];
+          }
         }
-      }, 1);
+
+        console.log(filteredPaths);
+        console.log(vehiclePaths)
+
+        // List of edge IDs to increment, in no particular order
+        allPaths = [];
+        Object.entries(filteredPaths).forEach(e => {
+          var i = 0;
+          x = filteredPaths[e[0]];
+
+          while (i < x.length - 1) {
+              allPaths.push([x[i], x[i+1]].sort().join("-"));
+              i++;
+          } 
+        });
+
+        var batch = 100;
+        var index = 0;
+        var intervalsRemaining = allPaths.length;
+        var intervalId = setInterval(function() {
+          d3.select("#status-text").html(`${intervalsRemaining} intervals remaining`);
+          incrementEdge(index, batch);
+          intervalsRemaining -= batch;
+          index += batch;
+
+          if (intervalsRemaining <= 0) {        
+            clearInterval(intervalId);
+            d3.select("#status-text").html("Interval iteration complete");
+            console.log(counts)
+            // console.log(`Max Count is ${d3.max(counts.values())}`)
+          }
+        }, 1);
+      }
 
       // Define drag event handlers
       function dragStarted(event, d) {
