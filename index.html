@@ -27,6 +27,8 @@
 
 const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
 
+      const default_stroke_width = 0.2;
+
       // Populate the checkboxes with car types vertically
       const checkboxes = d3.select("#carTypeCheckboxes")
         .selectAll(".checkbox-container")
@@ -79,7 +81,7 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         .enter().append("line")
         .attr("class", "link")
         .style("stroke", "white")
-        .style("stroke-width", 0.2)
+        .style("stroke-width", default_stroke_width)
         .attr("id", d => {return [d.source, d.target].sort().join("-")})
         .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))  // We have to be deterministic with our ordering on x1,x2,y1,y2
         .attr("y1", d => positions[[d.source, d.target].sort()[0]][1])
@@ -143,7 +145,6 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
       });
 
       function resetGraph() {
-        //console.log(getSelectedCarTypes())
         location.reload()
       }
       
@@ -151,7 +152,7 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
       // Iterate over allPaths and increment the width for invidual edges
       //
       function incrementEdge(index, batch) {
-        const strokeScaler = d3.scaleLinear([0, allPaths.length / 10], [0.1, 10]);
+        const strokeScaler = d3.scaleLinear([0, allPaths.length / 10], [default_stroke_width, 10]);
         for (i = 0 ; i < batch ; i++) {
           if (allPaths.length <= index + i) {
             console.log("Interval iteration complete.");
@@ -176,23 +177,6 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         }
       }
 
-      
-      var batch = 100;
-      var index = 0;
-      // var intervalsRemaining = allPaths.length;
-      // var intervalId = setInterval(function() {
-      //   d3.select("#status-text").html(`${intervalsRemaining} intervals remaining`);
-      //   incrementEdge(index, batch);
-      //   intervalsRemaining -= batch;
-      //   index += batch;
-
-      //   if (intervalsRemaining <= 0) {        
-      //     clearInterval(intervalId);
-      //     d3.select("#status-text").html("Interval iteration complete");
-      //     // console.log(`Max Count is ${d3.max(counts.values())}`)
-      //   }
-      // }, 1);
-
       function getSelectedCarTypes() {
         const selectedCarTypes = [];
         d3.selectAll(".carTypeCheckbox:checked").each(function () {
@@ -216,9 +200,6 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
           }
         }
 
-        console.log(filteredPaths);
-        console.log(vehiclePaths)
-
         // List of edge IDs to increment, in no particular order
         allPaths = [];
         Object.entries(filteredPaths).forEach(e => {
@@ -231,7 +212,9 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
           } 
         });
 
-        var batch = 100;
+        console.log(`Path Count: ${allPaths.length}`)
+        var batch = Math.round(allPaths.length / 1000 + 10);
+        console.log(`Batch Size: ${batch}`)
         var index = 0;
         var intervalsRemaining = allPaths.length;
         var intervalId = setInterval(function() {
@@ -243,8 +226,6 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
           if (intervalsRemaining <= 0) {        
             clearInterval(intervalId);
             d3.select("#status-text").html("Interval iteration complete");
-            console.log(counts)
-            // console.log(`Max Count is ${d3.max(counts.values())}`)
           }
         }, 1);
       }
