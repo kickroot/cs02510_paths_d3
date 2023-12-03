@@ -54,7 +54,7 @@
         .style("stroke", "white")
         .style("stroke-width", 0.2)
         .attr("id", d => {return [d.source, d.target].sort().join("-")})
-        .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))
+        .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))  // We have to be deterministic with our ordering on x1,x2,y1,y2
         .attr("y1", d => positions[[d.source, d.target].sort()[0]][1])
         .attr("x2", d => xScaler(positions[[d.source, d.target].sort()[1]][0]))
         .attr("y2", d => positions[[d.source, d.target].sort()[1]][1])
@@ -141,7 +141,6 @@
       }
 
       function dragging(event, d) {
-        console.log(`Moving ${d.id}`);
         // Move the node group itself
         d3.select(this).attr("transform", `translate(${d.x = event.x}, ${d.y = event.y})`);
         
@@ -152,12 +151,30 @@
         d3.selectAll(`.to-${d.id}`).attr("x2", event.x).attr("y2", event.y);
       }
 
-      function dragEnded(event, d) {        
+      function dragEnded(event, d) {    
+        const duration = 1000;   
+        const ease = d3.easeQuad; 
+        const position = positions[d.id]
+
         d3.select(this)
           .transition()
-          .duration(1000)
-          .ease(d3.easeQuad)
-          .attr("transform", `translate(${d.x = xScaler(positions[d.id][0])}, ${d.y = positions[d.id][1]})`);        
+          .duration(duration)
+          .ease(ease)
+          .attr("transform", `translate(${d.x = xScaler(position[0])}, ${d.y = position[1]})`);        
+
+        // // Move source of all relevant edges
+        d3.selectAll(`.from-${d.id}`)
+          .transition()
+          .duration(duration)
+          .ease(ease)
+          .attr("x1", xScaler(position[0])).attr("y1", position[1]);
+
+        // // Move the target of all relevant edges
+        d3.selectAll(`.to-${d.id}`)
+          .transition()
+          .duration(duration)
+          .ease(ease)
+          .attr("x2", xScaler(position[0])).attr("y2", position[1]);
       }
 
     </script>
