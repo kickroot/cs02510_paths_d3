@@ -11,28 +11,44 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <div id="content">
-      <h1>Path Utilization</h1>
-      <hr />
-      <div id="carTypeCheckboxes"></div>
-      <div class="date-selector-container">
-        <label for="startDate">Start Date:</label>
-        <input type="date" id="startDate" name="startDate" min="2015-05-01" max="2016-05-31" required value="2015-05-01">
-        
-        <label for="endDate">End Date:</label>
-        <input type="date" id="endDate" name="endDate" min="2015-05-01" max="2016-05-31" required value="2016-05-31">
-      </div>
-      <button id="renderButton">Render</button>
-      <button id="resetButton">Reset</button>
+      <!-- Add a container for the sidebar within the content -->
+      <div id="content">
+        <h1>Path Utilization</h1>
+        <hr />
+    
+        <!-- Add a container for the sidebar and main content within the content -->
+        <div id="container" style="display: flex;">
+          <div id="sidebar" style="margin-top: 10px; margin-left: 20px; text-align: center;">
+            <h2>Car Types</h2>
+            <br>
+            <div id="carTypeCheckboxes" style=""></div>
+            <br>
+
+            <div class="date-selector-container">
+              <label for="startDate" style="font-weight: bold">Start </label>
+              <br>
+              <input type="date" id="startDate" name="startDate" min="2015-05-01" max="2016-05-31" required value="2015-05-01">
+              <br> 
+              <br>
+              <label for="endDate" style="font-weight: bold">End </label>
+              <br>
+              <input type="date" id="endDate" name="endDate" min="2015-05-01" max="2016-05-31" required value="2016-05-31">
+              <br><br>
+            </div>
+            
+            <div>
+                <button id="renderButton">Render</button>
+                <br> <br>
+                <button id="resetButton">Reset</button>
+            </div>
+        </div>
+  
+          <div id="mainContent">
+          </div>
     </div>
-    <div id="status-bar">
-      <p id="status-text">
-        Ready...
-      </p>
-      </div>
     <script type="text/javascript">
 
-const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
+      const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
 
       const default_stroke_width = 0.2;
 
@@ -44,7 +60,7 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         .attr("class", "checkbox-container");
 
       checkboxes.append("label")
-        .text(d => ` ${d}  -- `)
+        .text(d => ` ${d} `)
         .append("input")
         .attr("type", "checkbox")
         .attr("class", "carTypeCheckbox")
@@ -62,7 +78,7 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
       Object.entries(positions).forEach(e => xValues.push(e[1][0]))
       // positions.values.forEach(v => xValues.append(v[0]));
       max = d3.max(xValues)
-      const xScaler = d3.scaleLinear([0, max], [0, 1.7 * max]);
+      const xScaler = d3.scaleLinear([0, max], [0, 1.45 * max]);
 
       // set the dimensions and margins of the graph
       var margin = {top: 10, right: 30, bottom: 30, left: 40},
@@ -70,7 +86,7 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
         height = 1000 - margin.top - margin.bottom;
 
       // append the svg object to the body of the page
-      var svg = d3.select("#content")
+      var svg = d3.select("#mainContent")
       .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -299,7 +315,6 @@ const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
           .ease(ease)
           .attr("x2", xScaler(position[0])).attr("y2", position[1]);
       }
-
     </script>
   </body>
 </html>    
