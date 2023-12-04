@@ -13,7 +13,7 @@
   <body>
       <!-- Add a container for the sidebar within the content -->
       <div id="content">
-        <h1>Path Utilization</h1>
+        <h1>Boonsong Lekagul Path Utilization</h1>
         <hr />
     
         <!-- Add a container for the sidebar and main content within the content -->
@@ -23,7 +23,8 @@
             <br>
             <div id="carTypeCheckboxes" style=""></div>
             <br>
-
+            <a class="filter-href" href="javascript:void(0);" onclick="selectBoxes(true)">Select All</a> | <a class="filter-href" href="javascript:void(0);" onclick="selectBoxes(false)" id="select-none">Select None</a>
+            <br /><br />
             <div class="date-selector-container">
               <label for="startDate" style="font-weight: bold">Start </label>
               <br>
@@ -63,7 +64,7 @@
         .text(d => ` ${d} `)
         .append("input")
         .attr("type", "checkbox")
-        .attr("class", "carTypeCheckbox")
+        .attr("class", "carTypeCheckbox filter-checkbox")
         .attr("value", d => d)
         .attr("checked", true);
 
@@ -105,7 +106,7 @@
         .enter().append("line")
         .attr("class", "link")
         .style("stroke", "white")
-        .style("stroke-width", default_stroke_width)
+        .style("stroke-width", `${default_stroke_width}px`)
         .attr("id", d => {return [d.source, d.target].sort().join("-")})
         .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))  // We have to be deterministic with our ordering on x1,x2,y1,y2
         .attr("y1", d => positions[[d.source, d.target].sort()[0]][1])
@@ -171,12 +172,25 @@
       
       // Event listener for "Render" button click
       d3.select("#renderButton").on("click", function() {
+        resetEdges();
         renderGraph(); // Render graph on button click
       });
 
       d3.select("#resetButton").on("click", function() {
-        resetGraph(); // Reset graph on button click
+        resetEdges();
+        // resetGraph(); // Reset graph on button click
       });
+
+      function selectBoxes(checked) {
+        console.log(`Setting boxes checked=${checked}`);
+        d3.selectAll(".filter-checkbox").property('checked', checked);
+      }
+
+      function resetEdges() {
+        counts = new Map();
+        var width = `${default_stroke_width}px`
+        d3.selectAll("svg g line").style("stroke-width", width);
+      }
 
       function resetGraph() {
         location.reload()
@@ -196,7 +210,7 @@
           var idVal = `#${allPaths[index+i]}`;
           var line = d3.select(idVal)
 
-          c = counts.get(idVal);
+          var c = counts.get(idVal);
           if (c == undefined) {
             c = 0;            
           }
