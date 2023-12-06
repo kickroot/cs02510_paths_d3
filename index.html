@@ -50,8 +50,10 @@
     <script type="text/javascript">
 
       const uniqueCarTypes = Array.from(new Set(car_data.map(d => d["car-type"])));
-
-      const default_stroke_width = 0.2;
+      const default_stroke_width = 1;
+      const default_op = 0.3;
+      let stopRendering = false;
+      let isRendering = false;
 
       // Populate the checkboxes with car types vertically
       const checkboxes = d3.select("#carTypeCheckboxes")
@@ -101,12 +103,13 @@
         .on("drag", dragging)
         .on("end", dragEnded);
 
-      var link = svg.selectAll(".link")
+        var link = svg.selectAll(".link")
         .data(data.links)
         .enter().append("line")
         .attr("class", "link")
         .style("stroke", "white")
-        .style("stroke-width", `${default_stroke_width}px`)
+        .style("opacity", default_op)
+        .style("stroke-width", default_stroke_width)
         .attr("id", d => {return [d.source, d.target].sort().join("-")})
         .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))  // We have to be deterministic with our ordering on x1,x2,y1,y2
         .attr("y1", d => positions[[d.source, d.target].sort()[0]][1])
@@ -118,13 +121,23 @@
           //
           nodes = [d.source, d.target].sort();
           return `from-${nodes[0]} to-${nodes[1]}`
-        })
+        });
+
+        var invislink = svg.selectAll(".invislink")
+        .data(data.links)
+        .enter().append("line")
+        .attr("class", "invislink")
+        .style("stroke", "white")
+        .style('opacity', 0)
+        .style("stroke-width", 10)
+        .attr("id", d => {return [d.source, d.target].sort().join("-")})
+        .attr("x1", d => xScaler(positions[[d.source, d.target].sort()[0]][0]))  // We have to be deterministic with our ordering on x1,x2,y1,y2
+        .attr("y1", d => positions[[d.source, d.target].sort()[0]][1])
+        .attr("x2", d => xScaler(positions[[d.source, d.target].sort()[1]][0]))
+        .attr("y2", d => positions[[d.source, d.target].sort()[1]][1])
         .on("mousemove", function (event, d) {
           var idVal = [d.source, d.target].sort().join("-");
           var count = counts.get("#"+idVal) || 0;
-          //console.log(idVal)
-          //var cords = d3.pointer(this);
-          //console.log(cords)
           tooltip.transition()
             .duration(200)
             .style("opacity", 0.9);
@@ -148,11 +161,11 @@
         .attr("transform", (d) => `translate(${xScaler(positions[d.id][0])}, ${positions[d.id][1]})`)
         .call(drag)
         .on("mouseover", function (event, d) {
-          d3.select(this).select("circle").transition().duration(500).attr("r", 16);
-          d3.select(this).select("text").transition().duration(500).attr("transform", "translate(8, 0)");
+          d3.select(this).select("circle").transition().duration(500).attr("r", 17);
+          d3.select(this).select("text").transition().duration(500).attr("transform", "translate(13, 0)");
         })
         .on("mouseout", function (event, d) {
-          d3.select(this).select("circle").transition().duration(500).attr("r", 10);
+          d3.select(this).select("circle").transition().duration(500).attr("r", 8);
           d3.select(this).select("text").transition().duration(500).attr("transform", "translate(0, 0)");        
         });
         
@@ -172,13 +185,14 @@
       
       // Event listener for "Render" button click
       d3.select("#renderButton").on("click", function() {
-        resetEdges();
-        renderGraph(); // Render graph on button click
+        if (isRendering == false){
+          resetEdges();
+          renderGraph(); // Render graph on button click
+        }
       });
 
       d3.select("#resetButton").on("click", function() {
         resetEdges();
-        // resetGraph(); // Reset graph on button click
       });
 
       function selectBoxes(checked) {
@@ -187,9 +201,12 @@
       }
 
       function resetEdges() {
+        stopRendering = true;
+        isRendering = false;
         counts = new Map();
         var width = `${default_stroke_width}px`
-        d3.selectAll("svg g line").style("stroke-width", width);
+        d3.selectAll("svg g line").style("stroke-width", width).style('opacity', default_op);;
+        svg.selectAll(".invislink").style("stroke-width", 10).style('opacity', 0);
       }
 
       function resetGraph() {
@@ -200,7 +217,12 @@
       // Iterate over allPaths and increment the width for invidual edges
       //
       function incrementEdge(index, batch) {
-        const strokeScaler = d3.scaleLinear([0, allPaths.length / 10], [default_stroke_width, 10]);
+        const strokeScaler = d3.scalePow().exponent(0.9) 
+                      .domain([0, Math.sqrt(allPaths.length / 10)]) // Using sqrt for better distribution
+                      .range([default_stroke_width, 10]);
+        const opScaler = d3.scalePow().exponent(0.9) 
+                      .domain([0, Math.sqrt(allPaths.length / 10)]) // Using sqrt for better distribution
+                      .range([default_op, 1]);
         for (i = 0 ; i < batch ; i++) {
           if (allPaths.length <= index + i) {
             console.log("Interval iteration complete.");
@@ -216,11 +238,10 @@
           }
           c += 1;
           counts.set(idVal, c);
-
           try {
-            line.style("stroke-width", strokeScaler(c) + "px");
+            line.style("stroke-width", strokeScaler(Math.sqrt(c)) + "px").style('opacity', opScaler(Math.sqrt(c)));
           } catch (e) {
-            // console.log(idVal);
+            //console.log(e);
           }
         }
       }
@@ -234,6 +255,8 @@
       }
 
       function renderGraph() {
+        stopRendering = false;
+        isRendering = true;
         const selectedCarTypes = getSelectedCarTypes();
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
@@ -243,7 +266,7 @@
           const carTypeCondition = selectedCarTypes.includes(d["car-type"]);
           const dateRangeCondition = (
             d["Start Timestamp"] >= startDate && d["Start Timestamp"] <= endDate
-          ); // Replace "date" with your actual property name
+          ); 
           return carTypeCondition && dateRangeCondition;
         });
 
@@ -271,17 +294,23 @@
         });
 
         console.log(`Path Count: ${allPaths.length}`)
-        var batch = Math.round(allPaths.length / 1000 + 10);
+        var batch = Math.round(allPaths.length / 2000 + 5);
         console.log(`Batch Size: ${batch}`)
         var index = 0;
         var intervalsRemaining = allPaths.length;
         var intervalId = setInterval(function() {
+          if (stopRendering) {
+            clearInterval(intervalId);
+            d3.select("#status-text").html("Rendering stopped");
+            return;
+          }
           d3.select("#status-text").html(`${intervalsRemaining} intervals remaining`);
           incrementEdge(index, batch);
           intervalsRemaining -= batch;
           index += batch;
 
-          if (intervalsRemaining <= 0) {        
+          if (intervalsRemaining <= 0) { 
+            isRendering = false       
             clearInterval(intervalId);
             d3.select("#status-text").html("Interval iteration complete");
           }
